@@ -1,0 +1,59 @@
+---
+- name: Update repositories cache.
+  apt:
+    update_cache: yes
+- name: Safe system upgrade via aptitude.
+  apt:
+    upgrade: safe
+- name: install mysql
+  apt:
+    name: mysql-server
+    state: present
+- name: install python
+  apt:
+    name: python3-pymysql
+    state: present
+- name: start & enable server
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+- name: Install nvm
+  become: no
+  shell: "curl -o- 'https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh' | bash"
+  args:
+    executable: /bin/bash
+
+- name: Adding nvm to bash_profile
+  lineinfile: path=/home/vagrant/.bash_profile
+    line={{ item }}
+    state=present
+    create=yes
+  with_items:
+    - 'source "$HOME/.nvm/nvm.sh"'
+
+- name: verify installation of nvm
+  shell: source ~/.bash_profile &&  nvm --version
+  become: no
+  args:
+    executable: /bin/bash
+
+- name: Install Node v15.14.0
+  shell: source ~/.bash_profile && nvm install v15.14.0
+  become: no
+  args:
+    executable: /bin/bash
+
+- name: add backend link to .env file of front end
+  lineinfile:
+    path: /vagrant_data/lu.uni.e4l.platform.frontend.dev/.env
+    search_string: 'API_URL=http://192.168.33.94:8080/e4lapi'
+    line: 'API_URL=http://localhost:8085/e4lapi'
+
+- name: run front end
+  shell: source ~/.bash_profile npm i && npm run &
+  become: no
+  args:
+    executable: /bin/bash
+    chdir: /vagrant_data/lu.uni.e4l.platform.frontend.dev/

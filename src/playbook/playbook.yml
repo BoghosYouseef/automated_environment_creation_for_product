@@ -1,0 +1,27 @@
+- hosts: all
+  remote_user: vagrant
+  become: yes
+  become_method: sudo
+
+
+  vars:
+    vHome: /home/vagrant
+
+  tasks:
+#  - name: copy scripts over to machine
+#    copy:
+#      src: scripts
+#      dest: /home/vagrant
+#  - name: make scripts executable
+#    shell: chmod +x /home/vagrant/scripts/*
+
+  - include_role:
+      name: setup
+
+  - include_role:
+      name: backend
+
+  - include_role:
+      name: frontend
+
+

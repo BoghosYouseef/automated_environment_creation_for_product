@@ -1,0 +1,141 @@
+---
+
+- name: Update repositories cache. 
+  apt:
+    update_cache: yes
+
+
+- name: Safe system upgrade via aptitude.
+  apt: 
+    upgrade: safe
+
+
+- name: Install packages required by the backend.
+  apt:
+    name: "{{ packages }}"
+  vars:
+    packages:
+    - default-jre
+    - openjdk-8-jdk
+    - tar
+    - zip
+    - unzip
+    - mysql-server
+    - mysql-client 
+    - python3-mysqldb
+    - libmysqlclient-dev
+
+- name: start and enable mysql service 
+  service:
+    name: mysql
+    state: started
+    enabled: yes
+
+#- name: create directory if they don't exist
+#  file:
+#    path: "{{ item }}"
+#    state: directory
+#    owner: root
+#    group: root
+#    mode: 0775
+#  loop:
+#    - /home/vagrant/sdkman
+
+
+
+- name: Set root user name and password for mysql
+  mysql_user: name=root
+    host="vagrant"
+    password="12345678"
+    check_implicit_admin=yes
+    login_user=root
+    login_password="12345678"
+    state=present
+
+- name: create Data Base e4l
+  shell: . create_data_base_e4l.sh
+  args: 
+    chdir: /home/vagrant/scripts
+    executable: /bin/bash
+  debugger: on_failed
+
+- name: Installing SDK Man
+  become: no
+  shell: "curl -s 'https://get.sdkman.io' | bash"
+  args:
+      executable: /bin/bash
+
+- name: Adding SDK Man to bash_profile
+  lineinfile: path=/home/vagrant/.bash_profile
+    line={{ item }}
+    state=present
+    create=yes
+  with_items:
+    - 'source "$HOME/.sdkman/bin/sdkman-init.sh"'
+
+- name: Print file status
+  debug:
+    var: file_status.stat.exists
+
+- name: Installing Grade Version 6.7.1
+  shell: source ~/.bash_profile && sdk install gradle 6.7.1
+  become: no
+  args:
+    executable: /bin/bash
+
+- name: Changing parameters in lu.uni.e4l.platform.api.dev/src/main/resources/application.properties"
+  lineinfile:
+    path: "/vagrant_data/lu.uni.e4l.platform.api.dev/src/main/resources/application.properties"
+    search_string: '{{item.From}}'
+    line: '{{item.To}}'
+    state: present
+  with_items:
+    - { From: 'spring.datasource.url=jdbc:mysql://localhost:3306/e4l?serverTimezone=Europe/Paris', To: 'spring.datasource.url=jdbc:mysql://localhost:8085/e4l' }
+    - { From: 'spring.datasource.username=root', To: 'spring.datasource.username=root' }
+    - { From: 'spring.datasource.password=12345678', To: 'spring.datasource.password=12345678' }
+
+#/lu.uni.e4l.platform.api.dev/src/main/resources$ vim application.properties
+
+- name: Build and Run
+  shell: . build_and_run.sh
+  args:   
+    chdir: /home/vagrant/scripts
+    executable: /bin/bash
+
+
+#- name: execute gradle wrapper
+#  shell: gradle wrapper 
+#  
+#  args: 
+#    chdir: /vagrant_data/lu.uni.e4l.platform.api.dev/
+#    executable: /bin/bash
+#
+#- name: make gradlew executable
+#  shell: chmod +x gradlew
+#
+#  args: 
+#    chdir: /vagrant_data/lu.uni.e4l.platform.api.dev/
+#    executable: /bin/bash
+#
+#- name: gradlew clean
+#  shell: . /gradlew clean
+#
+#  args: 
+#    chdir: /vagrant_data/lu.uni.e4l.platform.api.dev/
+#    executable: /bin/bash
+#
+#- name: gradlew build
+#  shell: . /gradlew build
+#
+#  args: 
+#    chdir: /vagrant_data/lu.uni.e4l.platform.api.dev/
+#    executable: /bin/bash
+#
+#- name: gradlew bootRun
+#  shell: . /gradlew bootRun
+#
+#  args: 
+#    chdir: /vagrant_data/lu.uni.e4l.platform.api.dev/
+#    executable: /bin/bash
+
+

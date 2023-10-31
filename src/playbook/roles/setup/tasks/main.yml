@@ -1,0 +1,11 @@
+---
+
+- name: copy scripts over to machine
+  copy:
+    src: scripts
+    dest: /home/vagrant
+- name: make scripts executable
+  shell: chmod +x /home/vagrant/scripts/*
+
+    #- name: fix issue with sdk installation
+  #shell: export SDKMAN_DIR="/usr/local/sdkman"
