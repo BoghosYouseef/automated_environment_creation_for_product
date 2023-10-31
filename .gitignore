@@ -3,3 +3,6 @@
 
 # vagrant env
 .vagrant
+
+# product 
+src/playbook/files/product/
