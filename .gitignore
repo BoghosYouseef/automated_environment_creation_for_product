@@ -2,7 +2,7 @@
 *.log
 
 # vagrant env
-.vagrant
+.vagrant/
 
 # product 
 src/playbook/files/product/
